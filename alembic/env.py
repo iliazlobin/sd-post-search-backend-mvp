@@ -1,22 +1,27 @@
 """Alembic environment configuration — reads DATABASE_URL from application config."""
 
+import re
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from alembic import context
 from post_search.config import settings
 from post_search.database import Base
+from post_search.models.post import Post  # noqa: F401
 
 # Import all models so Base.metadata is complete
 from post_search.models.user import User  # noqa: F401
-from post_search.models.post import Post  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-config.set_main_option("sqlalchemy.url", settings.database_url)
+# Derive a synchronous database URL for Alembic — the app uses asyncpg
+# (postgresql+asyncpg://) but Alembic's engine_from_config needs a sync driver
+# (psycopg2).  Replace the async driver with the sync default.
+_sync_url = re.sub(r"^postgresql\+asyncpg://", "postgresql://", settings.database_url)
+config.set_main_option("sqlalchemy.url", _sync_url)
 target_metadata = Base.metadata
 
 
