@@ -1,0 +1,43 @@
+# Post Search MVP — Docker Compose
+# Full stack: FastAPI app + PostgreSQL 16 with FTS.
+# Per MVP design decision D1: Postgres FTS is the index — no Elasticsearch.
+# Per MVP design decision D2: Synchronous indexing via generated tsvector — no Kafka.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postsearch
+      POSTGRES_PASSWORD: postsearch
+      POSTGRES_DB: postsearch
+    ports:
+      # Not published by default — app talks over the compose network.
+      # Uncomment only if you need to connect from a host tool (psql, etc.):
+      # - "5432:5432"
+      - target: 5432
+        published: 5432
+        protocol: tcp
+        mode: ingress
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postsearch"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  app:
+    build: .
+    ports:
+      - "${APP_PORT:-8050}:8000"
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://postsearch:postsearch@db:5432/postsearch"
+      SECRET_KEY: "${SECRET_KEY:-change-me-in-production}"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

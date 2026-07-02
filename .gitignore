@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+venv/
+.venv/
+
+# Environment
+.env
+!.env.example
+
+# Test & cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Runtime
+*.pid
+*.rdb
+dump.rdb
+verify/logs/
+verify/state/
+.venv*/
+env/
+*.log
+.finalize.lock/
+.noship
