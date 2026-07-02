@@ -25,9 +25,9 @@ def test_text_snippet_contains_mark_tags(client):
 
     assert len(results["results"]) > 0
     snippet = results["results"][0]["text_snippet"]
-    assert "<mark>fox</mark>" in snippet.lower() or "<mark>Fox</mark>" in snippet, (
-        f"Expected <mark> around 'fox' in snippet: {snippet}"
-    )
+    assert (
+        "<mark>fox</mark>" in snippet.lower() or "<mark>Fox</mark>" in snippet
+    ), f"Expected <mark> around 'fox' in snippet: {snippet}"
 
 
 def test_highlights_array_contains_matching_terms(client):
@@ -43,9 +43,9 @@ def test_highlights_array_contains_matching_terms(client):
 
     assert len(results["results"]) > 0
     highlights = results["results"][0]["highlights"]
-    assert "programming" in highlights, (
-        f"Highlights should contain 'programming': {highlights}"
-    )
+    assert (
+        "programming" in highlights
+    ), f"Highlights should contain 'programming': {highlights}"
 
 
 def test_multiple_terms_highlighted(client):
@@ -59,12 +59,12 @@ def test_multiple_terms_highlighted(client):
 
     assert len(results["results"]) > 0
     snippet = results["results"][0]["text_snippet"].lower()
-    assert "<mark>docker</mark>" in snippet, (
-        f"Expected <mark> around 'docker': {snippet}"
-    )
-    assert "<mark>kubernetes</mark>" in snippet, (
-        f"Expected <mark> around 'kubernetes': {snippet}"
-    )
+    assert (
+        "<mark>docker</mark>" in snippet
+    ), f"Expected <mark> around 'docker': {snippet}"
+    assert (
+        "<mark>kubernetes</mark>" in snippet
+    ), f"Expected <mark> around 'kubernetes': {snippet}"
 
 
 def test_no_highlights_for_non_matching_query(client):
@@ -94,9 +94,9 @@ def test_highlighting_with_phrase_search(client):
     assert len(results["results"]) > 0
     snippet = results["results"][0]["text_snippet"].lower()
     # Both words should be highlighted when they form the phrase
-    assert "<mark>machine</mark>" in snippet, (
-        f"Expected <mark> around 'machine': {snippet}"
-    )
-    assert "<mark>learning</mark>" in snippet, (
-        f"Expected <mark> around 'learning': {snippet}"
-    )
+    assert (
+        "<mark>machine</mark>" in snippet
+    ), f"Expected <mark> around 'machine': {snippet}"
+    assert (
+        "<mark>learning</mark>" in snippet
+    ), f"Expected <mark> around 'learning': {snippet}"

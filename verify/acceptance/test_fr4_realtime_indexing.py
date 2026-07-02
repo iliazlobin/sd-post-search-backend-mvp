@@ -54,9 +54,9 @@ def test_post_immediately_searchable(client):
 
     results = search_posts(client, "ZYZZYVA")
     post_ids = {r["post_id"] for r in results["results"]}
-    assert data["post_id"] in post_ids, (
-        f"New post should be immediately searchable: {results}"
-    )
+    assert (
+        data["post_id"] in post_ids
+    ), f"New post should be immediately searchable: {results}"
 
 
 def test_index_status_returns_indexed_true(client):
@@ -119,9 +119,9 @@ def test_soft_delete_removes_from_search(client):
 
     # Should not appear in search
     results_after = search_posts(client, "XYZZY")
-    assert len(results_after["results"]) == 0, (
-        f"Deleted post should not appear in search: {results_after}"
-    )
+    assert (
+        len(results_after["results"]) == 0
+    ), f"Deleted post should not appear in search: {results_after}"
 
     # Detail returns 404 for archived post
     r2 = client.get(f"/api/v1/posts/{data['post_id']}")

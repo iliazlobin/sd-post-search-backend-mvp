@@ -27,12 +27,12 @@ def test_search_by_keyword_finds_matching_posts(client):
     results = search_posts(client, "rust")
 
     post_texts = [r["text_snippet"].lower() for r in results["results"]]
-    assert any("rust" in t for t in post_texts), (
-        f"Expected to find 'rust' in results: {results}"
-    )
-    assert not any("completely" in t for t in post_texts), (
-        f"Unrelated post should not appear: {results}"
-    )
+    assert any(
+        "rust" in t for t in post_texts
+    ), f"Expected to find 'rust' in results: {results}"
+    assert not any(
+        "completely" in t for t in post_texts
+    ), f"Unrelated post should not appear: {results}"
 
 
 def test_search_results_ranked_by_relevance(client):
@@ -48,13 +48,13 @@ def test_search_results_ranked_by_relevance(client):
     results = search_posts(client, "rust")
 
     scores = [r["score"] for r in results["results"]]
-    assert len(scores) >= 2, (
-        f"Expected at least 2 results, got {len(scores)}: {results}"
-    )
+    assert (
+        len(scores) >= 2
+    ), f"Expected at least 2 results, got {len(scores)}: {results}"
     # Higher score = more relevant; first result should have highest score
-    assert scores[0] >= scores[1], (
-        f"Results should be ranked by score descending: {scores}"
-    )
+    assert (
+        scores[0] >= scores[1]
+    ), f"Results should be ranked by score descending: {scores}"
 
 
 def test_phrase_search_with_quotes(client):

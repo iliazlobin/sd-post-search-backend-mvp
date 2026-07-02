@@ -29,12 +29,12 @@ def test_author_filter(client):
     results = search_posts(client, "post", filters={"author_id": user_a["user_id"]})
 
     author_ids = {r["author_id"] for r in results["results"]}
-    assert author_ids == {user_a["user_id"]}, (
-        f"Author filter should return only author A's posts: {author_ids}"
-    )
-    assert len(results["results"]) == 2, (
-        f"Expected 2 results from author A, got {len(results['results'])}"
-    )
+    assert author_ids == {
+        user_a["user_id"]
+    }, f"Author filter should return only author A's posts: {author_ids}"
+    assert (
+        len(results["results"]) == 2
+    ), f"Expected 2 results from author A, got {len(results['results'])}"
 
 
 def test_date_range_filter(client):
@@ -60,9 +60,9 @@ def test_date_range_filter(client):
         "post",
         filters={"date_from": "2020-01-01T00:00:00", "date_to": "2020-01-01T00:00:01"},
     )
-    assert len(results_none["results"]) == 0, (
-        f"Narrow past range should have 0 results: {results_none}"
-    )
+    assert (
+        len(results_none["results"]) == 0
+    ), f"Narrow past range should have 0 results: {results_none}"
 
 
 def test_language_filter(client):
@@ -109,9 +109,9 @@ def test_combined_filters(client):
 
     author_ids = {r["author_id"] for r in results["results"]}
     assert author_ids == {user_a["user_id"]}
-    assert len(results["results"]) == 1, (
-        f"Combined filter should return 1 result, got {len(results['results'])}"
-    )
+    assert (
+        len(results["results"]) == 1
+    ), f"Combined filter should return 1 result, got {len(results['results'])}"
 
 
 def test_filter_returns_empty_200(client):
