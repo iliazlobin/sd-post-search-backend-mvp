@@ -28,14 +28,6 @@ class InvalidPageToken(SearchServiceError):
     """Raised when page_token is malformed, tampered, or doesn't match the query."""
 
 
-VALID_LANGUAGES = {"en", "es", "ja"}
-LANGUAGE_CONFIGS = {"en": "english", "es": "spanish", "ja": "japanese"}
-
-
-def _ts_config(language: str | None) -> str:
-    return LANGUAGE_CONFIGS.get(language or "en", "english")
-
-
 class SearchService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
@@ -48,14 +40,19 @@ class SearchService:
         return await self._lexical_search(data)
 
     async def _lexical_search(self, data: SearchRequest) -> SearchResponse:
-        """Execute a lexical (full-text) search."""
-        lang = data.filters.language if data.filters and data.filters.language else "en"
-        ts_config = _ts_config(lang)
+        """Execute a lexical (full-text) search.
+
+        NOTE: fts_vector is always built with to_tsvector('english', text)
+        regardless of the post's language column. We therefore always use
+        'english' for tsquery generation and ts_headline. The language
+        filter, when set, only narrows by the `language` column — it does
+        not change the FTS configuration. Multi-language tsvector columns
+        are a V2 optimization (design.md D6).
+        """
 
         params: dict = {
             "query_text": data.query,
             "limit": data.page_size + 1,  # fetch one extra to detect has-more
-            "ts_config": ts_config,
         }
 
         # Where clauses
@@ -88,19 +85,19 @@ class SearchService:
             params["last_score"] = decoded["last_score"]
             params["last_post_id"] = decoded["last_post_id"]
             where_clauses.append(
-                "(ts_rank(p.fts_vector, sq.q), p.post_id::text) < (:last_score, :last_post_id::text)"
+                "(ts_rank(p.fts_vector, sq.q), p.post_id::text) < (:last_score, :last_post_id)"
             )
 
         where_sql = " AND ".join(where_clauses)
 
         sql = text(f"""
             WITH search_query AS (
-                SELECT websearch_to_tsquery(:ts_config, :query_text) AS q
+                SELECT websearch_to_tsquery('english', :query_text) AS q
             )
             SELECT p.post_id, p.author_id, u.username AS author_username,
                    p.text, p.language, p.created_at, p.like_count,
                    ts_rank(p.fts_vector, sq.q) AS score,
-                   ts_headline(:ts_config, p.text, sq.q,
+                   ts_headline('english', p.text, sq.q,
                        'MaxWords=50 MinWords=20 ShortWord=3 MaxFragments=3 StartSel=<mark> StopSel=</mark>'
                    ) AS text_snippet
             FROM posts p

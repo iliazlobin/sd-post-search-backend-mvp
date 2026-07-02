@@ -72,7 +72,7 @@ def upgrade() -> None:
             postgresql.TSVECTOR,
             sa.Computed(
                 "to_tsvector('english', text)",
-                persisted=False,
+                persisted=True,
             ),
             nullable=True,
         ),

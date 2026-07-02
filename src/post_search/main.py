@@ -5,6 +5,7 @@ create_app() and use TestClient without module-level side effects.
 """
 
 from __future__ import annotations
+
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 

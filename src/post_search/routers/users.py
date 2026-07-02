@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from post_search.database import get_session
 from post_search.schemas.user import UserCreate, UserResponse
-from post_search.services.user_service import UserService, UsernameTaken
+from post_search.services.user_service import UsernameTaken, UserService
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 

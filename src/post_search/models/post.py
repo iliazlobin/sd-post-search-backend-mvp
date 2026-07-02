@@ -8,6 +8,7 @@ from datetime import datetime
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    Computed,
     DateTime,
     ForeignKey,
     Integer,
@@ -53,7 +54,9 @@ class Post(Base):
     #   fts_vector tsvector GENERATED ALWAYS AS (to_tsvector('english', text)) STORED
     # The ORM maps it as read-only; we never set it from Python.
     fts_vector: Mapped[str | None] = mapped_column(
-        "fts_vector", deferred=True, insert_default=None
+        "fts_vector",
+        Computed("to_tsvector('english', text)", persisted=True),
+        deferred=True,
     )
 
     author = relationship("User", back_populates="posts", lazy="selectin")

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,6 +33,7 @@ class UserService:
         self.session.add(user)
         await self.session.flush()
         await self.session.refresh(user)
+        await self.session.commit()
 
         return UserResponse(
             user_id=user.user_id,

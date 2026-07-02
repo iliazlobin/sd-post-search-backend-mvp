@@ -6,42 +6,66 @@ import os
 import uuid
 from collections.abc import AsyncGenerator
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 # Use a separate test database — set this before any post_search imports
 # so that database.py's module-level engine construct picks up the right URL.
 TEST_DATABASE_URL = (
     "postgresql+asyncpg://postsearch:postsearch@localhost:5432/postsearch_test"
 )
-os.environ.setdefault("DATABASE_URL", TEST_DATABASE_URL)
+os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 
-from post_search.database import Base, get_session  # noqa: E402
+from post_search.database import get_session  # noqa: E402
 from post_search.main import create_app  # noqa: E402
 
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """Session-scoped event loop for async fixtures."""
-    import asyncio
-
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
+CREATE_STATEMENTS = [
+    "CREATE EXTENSION IF NOT EXISTS pgcrypto",
+    """CREATE TABLE IF NOT EXISTS users (
+        user_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        username varchar(50) UNIQUE NOT NULL,
+        created_at timestamptz NOT NULL DEFAULT now()
+    )""",
+    """CREATE TABLE IF NOT EXISTS posts (
+        post_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        author_id uuid NOT NULL REFERENCES users(user_id),
+        text text NOT NULL,
+        language varchar(5) NOT NULL DEFAULT 'en',
+        created_at timestamptz NOT NULL DEFAULT now(),
+        privacy varchar(20) NOT NULL DEFAULT 'public',
+        like_count integer NOT NULL DEFAULT 0,
+        is_archived boolean NOT NULL DEFAULT false,
+        fts_vector tsvector GENERATED ALWAYS AS (to_tsvector('english', text)) STORED,
+        CONSTRAINT ck_post_language CHECK (language IN ('en', 'es', 'ja')),
+        CONSTRAINT ck_post_privacy CHECK (privacy IN ('public', 'followers_only'))
+    )""",
+    "CREATE INDEX IF NOT EXISTS ix_posts_author_id ON posts (author_id)",
+    "CREATE INDEX IF NOT EXISTS ix_posts_created_at ON posts (created_at)",
+    "CREATE INDEX IF NOT EXISTS idx_posts_fts_vector ON posts USING gin (fts_vector)",
+]
 
 
 @pytest_asyncio.fixture(scope="session")
 async def test_engine():
-    """Create a test engine shared across the session."""
+    """Create a test engine shared across the session. Tables created once."""
     engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-    # Create all tables (use metadata.create_all since we manage schema in tests)
+    # Use raw DDL for proper PostgreSQL types (tsvector, GIN index)
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        # Drop first to ensure clean slate
+        await conn.execute(text("DROP TABLE IF EXISTS posts CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS users CASCADE"))
+        for stmt in CREATE_STATEMENTS:
+            await conn.execute(text(stmt))
     yield engine
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        await conn.execute(text("DROP TABLE IF EXISTS posts CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS users CASCADE"))
     await engine.dispose()
 
 

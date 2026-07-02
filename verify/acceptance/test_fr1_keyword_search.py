@@ -11,8 +11,8 @@ Unsupported mode (semantic/hybrid) → 501
 from verify.acceptance.conftest import (
     assert_422,
     assert_501,
-    create_user,
     create_post,
+    create_user,
     search_posts,
 )
 
@@ -27,12 +27,12 @@ def test_search_by_keyword_finds_matching_posts(client):
     results = search_posts(client, "rust")
 
     post_texts = [r["text_snippet"].lower() for r in results["results"]]
-    assert any(
-        "rust" in t for t in post_texts
-    ), f"Expected to find 'rust' in results: {results}"
-    assert not any(
-        "completely" in t for t in post_texts
-    ), f"Unrelated post should not appear: {results}"
+    assert any("rust" in t for t in post_texts), (
+        f"Expected to find 'rust' in results: {results}"
+    )
+    assert not any("completely" in t for t in post_texts), (
+        f"Unrelated post should not appear: {results}"
+    )
 
 
 def test_search_results_ranked_by_relevance(client):
@@ -48,17 +48,19 @@ def test_search_results_ranked_by_relevance(client):
     results = search_posts(client, "rust")
 
     scores = [r["score"] for r in results["results"]]
-    assert (
-        len(scores) >= 2
-    ), f"Expected at least 2 results, got {len(scores)}: {results}"
+    assert len(scores) >= 2, (
+        f"Expected at least 2 results, got {len(scores)}: {results}"
+    )
     # Higher score = more relevant; first result should have highest score
-    assert (
-        scores[0] >= scores[1]
-    ), f"Results should be ranked by score descending: {scores}"
+    assert scores[0] >= scores[1], (
+        f"Results should be ranked by score descending: {scores}"
+    )
 
 
 def test_phrase_search_with_quotes(client):
     """Quoted phrases match exact word sequences."""
+    import re
+
     user = create_user(client, username="phraser_fr1")
     create_post(
         client, user["user_id"], text="machine learning is transforming industries"
@@ -68,7 +70,11 @@ def test_phrase_search_with_quotes(client):
     # Phrase search: only exact sequence matches
     results = search_posts(client, '"machine learning"')
 
-    post_texts = [r["text_snippet"].lower() for r in results["results"]]
+    # ts_headline wraps individual matching lexemes in <mark> tags,
+    # so strip tags before checking for the literal phrase substring.
+    post_texts = [
+        re.sub(r"<[^>]+>", "", r["text_snippet"]).lower() for r in results["results"]
+    ]
     # "machine learning" as contiguous phrase should match the first post
     matching = [t for t in post_texts if "machine learning" in t]
     assert len(matching) > 0, f"Phrase 'machine learning' should match: {results}"

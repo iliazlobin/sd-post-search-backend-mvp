@@ -53,6 +53,7 @@ class PostService:
         self.session.add(post)
         await self.session.flush()
         await self.session.refresh(post)
+        await self.session.commit()
 
         return PostResponse(
             post_id=post.post_id,
@@ -69,7 +70,7 @@ class PostService:
         result = await self.session.execute(
             select(Post, User)
             .join(User, Post.author_id == User.user_id)
-            .where(Post.post_id == post_id, Post.is_archived is False)
+            .where(Post.post_id == post_id, ~Post.is_archived)
         )
         row = result.one_or_none()
         if row is None:
@@ -107,3 +108,4 @@ class PostService:
 
         post.is_archived = True
         await self.session.flush()
+        await self.session.commit()

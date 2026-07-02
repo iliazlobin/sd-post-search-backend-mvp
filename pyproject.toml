@@ -24,4 +24,26 @@ dev = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 testpaths = ["tests", "verify/acceptance"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "N", "B", "SIM", "ARG", "RUF"]
+# B008: FastAPI Depends() uses function call in default args — intentional pattern.
+ignore = ["B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ARG001", "ARG002", "E501"]
+"verify/**" = ["ARG001", "ARG002", "E501"]
+"src/post_search/main.py" = ["ARG001"]
+"src/post_search/services/*" = ["N818", "E501"]
+"src/post_search/routers/*" = ["B904", "E501"]
+"src/post_search/config.py" = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"

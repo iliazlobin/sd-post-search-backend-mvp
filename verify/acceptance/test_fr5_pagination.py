@@ -10,8 +10,8 @@ Tampered token → 400
 
 from verify.acceptance.conftest import (
     assert_400,
-    create_user,
     create_post,
+    create_user,
     search_posts,
 )
 
@@ -28,9 +28,9 @@ def test_first_page_returns_page_size_results(client):
 
     results = search_posts(client, "pagination", page_size=10)
 
-    assert (
-        len(results["results"]) == 10
-    ), f"First page should have 10 results, got {len(results['results'])}"
+    assert len(results["results"]) == 10, (
+        f"First page should have 10 results, got {len(results['results'])}"
+    )
     assert results["next_page_token"] is not None, "Should have next_page_token"
 
 
@@ -53,9 +53,9 @@ def test_second_page_returns_different_results(client):
     assert len(page2_ids) == 5
 
     # No overlap between pages
-    assert page1_ids.isdisjoint(
-        page2_ids
-    ), f"Pages should return different posts: page1={page1_ids}, page2={page2_ids}"
+    assert page1_ids.isdisjoint(page2_ids), (
+        f"Pages should return different posts: page1={page1_ids}, page2={page2_ids}"
+    )
 
 
 def test_last_page_returns_null_token(client):
@@ -68,9 +68,9 @@ def test_last_page_returns_null_token(client):
     results = search_posts(client, "last page", page_size=10)
 
     assert len(results["results"]) <= 8
-    assert (
-        results["next_page_token"] is None
-    ), f"Last page should have null next_page_token: {results}"
+    assert results["next_page_token"] is None, (
+        f"Last page should have null next_page_token: {results}"
+    )
 
 
 def test_invalid_token_returns_400(client):
